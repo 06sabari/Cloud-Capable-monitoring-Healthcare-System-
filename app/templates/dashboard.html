@@ -1,0 +1,42 @@
+<!-- app/templates/dashboard.html -->
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Healthcare Monitor Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 16px; }
+    .card { border: 1px solid #ddd; padding: 12px; margin-bottom: 8px; border-radius: 6px;}
+    .device { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Live Healthcare Telemetry</h1>
+  <div id="list"></div>
+
+  <script>
+    const list = document.getElementById('list');
+    const ws = new WebSocket(`ws://${window.location.host}/ws`);
+    ws.onmessage = (ev) => {
+      try {
+        const data = JSON.parse(ev.data);
+        // Build HTML card
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="device">Device: ${data.device_id} <small>${new Date(data.timestamp).toLocaleString()}</small></div>
+          <div>HR: ${data.heart_rate ?? '-'} bpm</div>
+          <div>SpO₂: ${data.spo2 ?? '-'}%</div>
+          <div>Temp: ${data.temperature ?? '-'} °C</div>
+          <div>BP: ${data.blood_pressure_sys ?? '-'} / ${data.blood_pressure_dia ?? '-'}</div>
+        `;
+        list.prepend(card);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    ws.onopen = () => console.log('WS open');
+    ws.onclose = () => console.log('WS closed');
+  </script>
+</body>
+</html>
